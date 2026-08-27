@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>دایناسور موتور سوار | Dino Moto Runner</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="game-wrap">
+    <h1 class="title">🦖 دایناسور موتور سوار 🏍️</h1>
+
+    <div id="canvas-container">
+      <canvas id="game" width="900" height="300"></canvas>
+
+      <div id="overlay" class="overlay">
+        <div id="start-screen" class="screen">
+          <div class="big-icon">🏍️</div>
+          <p>برای شروع بازی <b>Space</b> یا کلیک کن</p>
+          <p class="sub">از موانع (گاو 🐄 و تخم دایناسور 🥚) بپر و مراقب پرنده دایناسور 🦅 هم باش!</p>
+        </div>
+        <div id="gameover-screen" class="screen hidden">
+          <div class="big-icon">💥</div>
+          <p class="go-title">باختی!</p>
+          <p>امتیاز: <span id="final-score">0</span> &nbsp;|&nbsp; رکورد: <span id="final-best">0</span></p>
+          <p class="sub">برای شروع دوباره <b>Space</b> یا کلیک کن</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="hint">کنترل: کلید <b>Space</b> / <b>↑</b> یا لمس صفحه برای پریدن</p>
+  </div>
+
+<script src="script.js"></script>
+</body>
+</html>
