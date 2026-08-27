@@ -123,9 +123,19 @@ let obstacles = [];
 // Ground obstacles are auto-cropped PNGs now (no leftover transparent
 // padding), so h/w map 1:1 onto the visible sprite and `y = GROUND_Y - h`
 // always lands them exactly on the ground line.
-const GROUND_OBSTACLE_H = { min: 66, max: 102 };
+// Kept comfortably smaller than the player (like classic obstacle/character
+// proportions) so every obstacle is realistically jumpable.
+const GROUND_OBSTACLE_H = { min: 58, max: 82 };
 
-const FLY_OBSTACLE_H = 66;
+const FLY_OBSTACLE_H = 66; // display height for the reference (wing-up) frame
+// ptero1 (wing-up) and ptero2 (wing-down) sprites are NOT the same native
+// scale/aspect, so instead of stretching both into one identical box
+// (which made one frame look bigger than the other) each frame is drawn
+// at its own correct aspect ratio and anchored by the beak-tip position,
+// which is embedded here as a fraction of each sprite's own height.
+// This keeps the head fixed in place while the wing swings above/below it.
+const PTERO_BEAK_FRAC = { ptero1: 0.6614, ptero2: 0.2246 };
+
 // Heights are derived from the (now correct) PLAYER_H so the "low"
 // pterodactyl always forces a jump and the "high" one always clears a
 // standing player's head with a safe margin.
@@ -140,10 +150,9 @@ function spawnObstacle() {
   const isFlying = Math.random() < 0.28;
 
   if (isFlying) {
-    // ptero1/ptero2 have been pre-aligned to an identical canvas size
-    // (same aspect ratio for both flap frames), so a single aspect
-    // value here keeps both frames the same displayed size - no more
-    // size-mismatch flicker between the wing-up/wing-down frames.
+    // Reference box (used for spawn position + collision) is sized from
+    // ptero1 (the wing-up frame). ptero2 is drawn using its own aspect at
+    // render time - see drawObstacles().
     const aspect = images.ptero1.width / images.ptero1.height;
     const h = FLY_OBSTACLE_H;
     const w = h * aspect;
@@ -162,7 +171,7 @@ function spawnObstacle() {
     const key = useCow ? pick(COW_KEYS) : pick(EGG_KEYS);
     const img = images[key];
     const aspect = img.width / img.height;
-    const h = randInt(GROUND_OBSTACLE_H.min, GROUND_OBSTACLE_H.max) * (useCow ? 1.05 : 0.85);
+    const h = randInt(GROUND_OBSTACLE_H.min, GROUND_OBSTACLE_H.max) * (useCow ? 1.0 : 0.85);
     const w = h * aspect;
     obstacles.push({
       type: 'ground',
@@ -179,9 +188,9 @@ function spawnObstacle() {
 // World state
 // ---------------------------------------------------------
 let state = 'ready'; // ready | playing | gameover
-const SPEED_START = 5.5;
-const SPEED_MAX = 12.5;
-const SPEED_ACCEL = 0.0022; // px/frame^2 - gentle, steady ramp (like the classic dino game)
+const SPEED_START = 6.5;
+const SPEED_MAX = 14;
+const SPEED_ACCEL = 0.003; // px/frame^2 - reaches max in well under a minute
 let speed = SPEED_START;
 let distance = 0;
 let score = 0;
@@ -195,12 +204,12 @@ let clouds = [];
 // ---------------------------------------------------------
 // Total airtime of a jump (frame-units), from launch back to ground level.
 const JUMP_AIR_TIME = (2 * Math.abs(JUMP_VELOCITY)) / GRAVITY;
-const GAP_SAFETY_FACTOR = 1.55; // generous margin so jumps always clear in time
-const GAP_EXTRA_BUFFER = 110;   // covers obstacle width + reaction time
+const GAP_SAFETY_FACTOR = 1.3; // margin so jumps always clear in time, without being empty/sparse
+const GAP_EXTRA_BUFFER = 70;   // covers obstacle width + reaction time
 
 function computeSpawnGap(currentSpeed) {
   const minGap = currentSpeed * JUMP_AIR_TIME * GAP_SAFETY_FACTOR + GAP_EXTRA_BUFFER;
-  const maxGap = minGap * 1.45; // some variety, but never below the safe minimum
+  const maxGap = minGap * 1.4; // some variety, but never below the safe minimum
   return rand(minGap, maxGap);
 }
 
@@ -278,8 +287,20 @@ function drawPlayer() {
 function drawObstacles() {
   obstacles.forEach((o) => {
     if (o.type === 'fly') {
-      const img = o.flapFrame === 0 ? images.ptero1 : images.ptero2;
-      ctx.drawImage(img, o.x, o.y, o.w, o.h);
+      // Draw whichever flap frame at ITS OWN aspect ratio (never force-fit
+      // both frames into one box - that's what made them look mismatched),
+      // scaled so o.h (the ptero1 reference height) sets the common scale,
+      // then shifted so the beak-tip anchor lines up between frames.
+      const isFrame1 = o.flapFrame === 0;
+      const img = isFrame1 ? images.ptero1 : images.ptero2;
+      const key = isFrame1 ? 'ptero1' : 'ptero2';
+      const scale = o.h / images.ptero1.height;
+      const dw = img.width * scale;
+      const dh = img.height * scale;
+      const beakY = dh * PTERO_BEAK_FRAC[key];
+      const refBeakY = o.h * PTERO_BEAK_FRAC.ptero1;
+      const dy = o.y + (refBeakY - beakY);
+      ctx.drawImage(img, o.x, dy, dw, dh);
     } else {
       ctx.drawImage(images[o.key], o.x, o.y, o.w, o.h);
     }
