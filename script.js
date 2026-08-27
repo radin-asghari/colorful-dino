@@ -68,10 +68,14 @@ function pick(arr) { return arr[randInt(0, arr.length - 1)]; }
 // ---------------------------------------------------------
 // Player (motorcycle dino)
 // ---------------------------------------------------------
-const PLAYER_H = 92;
-const PLAYER_ASPECT = 450 / 310; // width / height from source crop
-const PLAYER_W = PLAYER_H * PLAYER_ASPECT;
+// PLAYER_H is the on-screen size we WANT (matches the classic
+// Google-dino proportions relative to the ground). The width is
+// derived from the real (tightly-cropped) sprite aspect ratio once
+// the image is loaded, so the character is never squashed/shrunk
+// by leftover transparent padding in the PNG.
+const PLAYER_H = 100;
 const PLAYER_X = 70;
+let PLAYER_W = PLAYER_H; // placeholder until image loads, recalculated below
 
 const GRAVITY = 0.62;
 const JUMP_VELOCITY = -12.6;
@@ -85,6 +89,17 @@ const player = {
   jumping: false,
   bob: 0,
 };
+
+// Call once after the dino image has loaded: sizes the player box from
+// the sprite's real aspect ratio so the motorcycle wheels sit exactly
+// on the ground line and the character is drawn at full intended size.
+function calibratePlayerSize() {
+  const img = images.dino;
+  const aspect = img.width / img.height;
+  PLAYER_W = PLAYER_H * aspect;
+  player.w = PLAYER_W;
+  player.h = PLAYER_H;
+}
 
 function resetPlayer() {
   player.y = GROUND_Y - PLAYER_H;
@@ -105,18 +120,34 @@ function jump() {
 // ---------------------------------------------------------
 let obstacles = [];
 
-const GROUND_OBSTACLE_H = { min: 62, max: 96 };
-const FLY_OBSTACLE_H = 60;
-const FLY_HEIGHTS = [GROUND_Y - 70, GROUND_Y - 150]; // low (must jump) / high (pass under)
+// Ground obstacles are auto-cropped PNGs now (no leftover transparent
+// padding), so h/w map 1:1 onto the visible sprite and `y = GROUND_Y - h`
+// always lands them exactly on the ground line.
+const GROUND_OBSTACLE_H = { min: 66, max: 102 };
+
+const FLY_OBSTACLE_H = 66;
+// Heights are derived from the (now correct) PLAYER_H so the "low"
+// pterodactyl always forces a jump and the "high" one always clears a
+// standing player's head with a safe margin.
+function getFlyHeights() {
+  const standingTop = GROUND_Y - PLAYER_H;
+  const low = GROUND_Y - FLY_OBSTACLE_H - 12;                  // just above ground: must jump
+  const high = standingTop - FLY_OBSTACLE_H - 22;               // clears a standing player's head
+  return [low, high];
+}
 
 function spawnObstacle() {
   const isFlying = Math.random() < 0.28;
 
   if (isFlying) {
+    // ptero1/ptero2 have been pre-aligned to an identical canvas size
+    // (same aspect ratio for both flap frames), so a single aspect
+    // value here keeps both frames the same displayed size - no more
+    // size-mismatch flicker between the wing-up/wing-down frames.
     const aspect = images.ptero1.width / images.ptero1.height;
     const h = FLY_OBSTACLE_H;
     const w = h * aspect;
-    const flyY = pick(FLY_HEIGHTS);
+    const flyY = pick(getFlyHeights());
     obstacles.push({
       type: 'fly',
       x: W + 20,
@@ -137,7 +168,7 @@ function spawnObstacle() {
       type: 'ground',
       key,
       x: W + 20,
-      y: GROUND_Y - h,
+      y: GROUND_Y - h, // bottom of the (tightly-cropped) sprite sits exactly on the ground
       w, h,
       passed: false,
     });
@@ -148,14 +179,30 @@ function spawnObstacle() {
 // World state
 // ---------------------------------------------------------
 let state = 'ready'; // ready | playing | gameover
-let speed = 6.2;
-const SPEED_MAX = 15;
+const SPEED_START = 5.5;
+const SPEED_MAX = 12.5;
+const SPEED_ACCEL = 0.0022; // px/frame^2 - gentle, steady ramp (like the classic dino game)
+let speed = SPEED_START;
 let distance = 0;
 let score = 0;
 let best = Number(localStorage.getItem('dinoMotoHighScore') || 0);
 let groundOffset = 0;
 let nextSpawnDist = 0;
 let clouds = [];
+
+// ---------------------------------------------------------
+// Obstacle spacing (guarantees every gap is jumpable)
+// ---------------------------------------------------------
+// Total airtime of a jump (frame-units), from launch back to ground level.
+const JUMP_AIR_TIME = (2 * Math.abs(JUMP_VELOCITY)) / GRAVITY;
+const GAP_SAFETY_FACTOR = 1.55; // generous margin so jumps always clear in time
+const GAP_EXTRA_BUFFER = 110;   // covers obstacle width + reaction time
+
+function computeSpawnGap(currentSpeed) {
+  const minGap = currentSpeed * JUMP_AIR_TIME * GAP_SAFETY_FACTOR + GAP_EXTRA_BUFFER;
+  const maxGap = minGap * 1.45; // some variety, but never below the safe minimum
+  return rand(minGap, maxGap);
+}
 
 function initClouds() {
   clouds = [];
@@ -170,11 +217,11 @@ function initClouds() {
 
 function resetGame() {
   obstacles = [];
-  speed = 6.2;
+  speed = SPEED_START;
   distance = 0;
   score = 0;
   groundOffset = 0;
-  nextSpawnDist = 220;
+  nextSpawnDist = computeSpawnGap(SPEED_START) + 100; // extra breathing room at the start
   resetPlayer();
   initClouds();
 }
@@ -281,8 +328,7 @@ function updateObstacles(dt) {
   distance += speed * dt;
   if (distance >= nextSpawnDist) {
     spawnObstacle();
-    const gap = rand(230, 380) - Math.min(speed * 8, 140);
-    nextSpawnDist = distance + Math.max(gap, 160);
+    nextSpawnDist = distance + computeSpawnGap(speed);
   }
 }
 
@@ -309,7 +355,10 @@ function checkCollisions() {
 
 function updateScore(dt) {
   score += dt * 0.14;
-  speed = Math.min(SPEED_MAX, 6.2 + score / 90);
+}
+
+function updateSpeed(dt) {
+  speed = Math.min(SPEED_MAX, speed + SPEED_ACCEL * dt);
 }
 
 function updateClouds(dt) {
@@ -341,6 +390,7 @@ function loop(ts) {
     updateObstacles(dt);
     updateClouds(dt);
     updateScore(dt);
+    updateSpeed(dt);
     groundOffset += speed * dt;
 
     if (checkCollisions()) {
@@ -413,6 +463,8 @@ overlay.addEventListener('pointerdown', (e) => {
 // Boot
 // ---------------------------------------------------------
 loadAssets(() => {
+  calibratePlayerSize();
+  resetPlayer();
   initClouds();
   finalBestEl.textContent = Math.floor(best);
   requestAnimationFrame(loop);
