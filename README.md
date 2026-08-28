@@ -1,7 +1,7 @@
 # 🦖 Dino Moto Runner
 
 <p align="center">
-  <img src="Pictures/Gemini_Generated_Image_3duclk3duclk3duc.jpg" alt="Dino Moto Runner" width="850">
+  <img src="Pictures/3.png" alt="Dino Moto Runner" width="850">
 </p>
 
 <p align="center">
@@ -71,13 +71,21 @@ The game uses a simple one-button control system, making it easy to pick up but 
 ### 🎮 Gameplay
 
 <p align="center">
-  <img src="Pictures/Gemini_Generated_Image_6xidl06xidl06xid.jpg" alt="Dino Moto Runner Gameplay" width="850">
+  <img src="Pictures/2.png" alt="Dino Moto Runner Gameplay" width="850">
 </p>
-
+<p align="center">
+  <img src="Pictures/5.png" alt="Dino Moto Runner Gameplay" width="850">
+</p>
+<p align="center">
+  <img src="Pictures/4.png" alt="Dino Moto Runner Gameplay" width="850">
+</p>
+<p align="center">
+  <img src="Pictures/1.png" alt="Dinosaur Motorcycle" width="850">
+</p>
 ### 🦖 The Dino
 
 <p align="center">
-  <img src="Pictures/Gemini_Generated_Image_gwu6d3gwu6d3gwu6.jpg" alt="Dinosaur Motorcycle" width="850">
+  <img src="Pictures/7.jpg" alt="Dinosaur Motorcycle" width="850">
 </p>
 
 ### 🌎 Game World
@@ -91,26 +99,15 @@ The game uses a simple one-button control system, making it easy to pick up but 
 <p align="center">
   <img src="Pictures/Gemini_Generated_Image_vd24unvd24unvd24.jpg" alt="Dino Moto Runner Characters and Obstacles" width="850">
 </p>
+ <p align="center">
+ <img src="Pictures/Gemini_Generated_Image_3duclk3duclk3duc.jpg" alt="Dino Moto Runner" width="850">
+ </p>
+ <p align="center">
+ <img src="Pictures/6.jpg" alt="Dino Moto Runner" width="850">
+ </p>
 
 ---
 
-## 🎥 Gameplay Preview
-
-> A gameplay GIF can be added here later for a more interactive GitHub presentation.
-
-```text
-[ ADD GAMEPLAY GIF HERE ]
-```
-
-For example:
-
-```markdown
-<p align="center">
-  <img src="Pictures/gameplay.gif" alt="Dino Moto Runner Gameplay" width="850">
-</p>
-```
-
----
 
 ## 🛠️ Built With
 
@@ -319,7 +316,7 @@ There are only a few controls, but the increasing speed and combination of groun
 This project was designed and developed collaboratively by:
 
 * **Radin Asghari**
-* **Amirhossein Hejari**
+* **Amirhossein Hajari**
 
 ### 🤝 Team Project
 
