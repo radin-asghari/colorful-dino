@@ -82,7 +82,7 @@ The game uses a simple one-button control system, making it easy to pick up but 
 <p align="center">
   <img src="Pictures/1.png" alt="Dinosaur Motorcycle" width="850">
 </p>
-### 🦖 The Dino
+🦖 The Dino
 
 <p align="center">
   <img src="Pictures/7.jpg" alt="Dinosaur Motorcycle" width="850">
