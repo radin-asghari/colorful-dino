@@ -316,7 +316,7 @@ There are only a few controls, but the increasing speed and combination of groun
 This project was designed and developed collaboratively by:
 
 * **Radin Asghari**
-* **Amirhossein Hajari**
+* **Amirhossein Hajjari**
 
 ### 🤝 Team Project
 
